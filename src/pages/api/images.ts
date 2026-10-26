@@ -1,0 +1,92 @@
+// Next.js API route support: https://nextjs.org/docs/api-routes/introduction
+import type { NextApiRequest, NextApiResponse } from "next";
+import formidable from 'formidable';
+import { randomUUID } from 'crypto';
+import fs from 'fs/promises';
+import path from 'path';
+
+export const config = {
+  api: {
+    bodyParser: false
+  }
+};
+
+const DATA_DIR = path.join(process.cwd(), "data");
+const UPLOADS_DIR = path.join(DATA_DIR, "uploads");
+const META_FILE = path.join(DATA_DIR, 'images.json');
+
+export type Image = {
+  id: string;
+  filename: string;
+  name: string;
+  mimetype: string;
+  size: number;
+  createdAt: string;
+}
+
+async function readMeta(): Promise<Image[]> {
+  try {
+    let resp = await fs.readFile(META_FILE, 'utf8');
+    let parsed = JSON.parse(resp);
+    return parsed;
+  } catch {
+    return [];
+  }
+}
+
+async function writeMeta(images: Image[]) {
+  await fs.writeFile(META_FILE, JSON.stringify(images, null, 2));
+}
+
+export default async function Images(
+  req: NextApiRequest,
+  res: NextApiResponse,
+) {
+  try {
+    let { query, method, body } = req;
+    if (method === 'GET') { // fetch all or search query params
+      let search: string = query.search ?? '';
+  
+      const images = await readMeta();
+      let results = images;
+      if (search) {
+        results = images.filter((img) => img.name.toLowerCase().includes(search))
+      }
+      let resultsWithUrls = results.map((img) => {
+        return {...img, url: `/api/images/${img.id}`};
+      });
+      return res.status(200).json(resultsWithUrls);
+    } else if (method === 'POST') { // new upload
+      const form = formidable({
+        uploadDir: UPLOADS_DIR,
+        keepExtensions: true,
+        maxFileSize: 10 * 1024 * 1024,
+        filter: ({ mimetype }) => !!mimetype?.startsWith('image/'),
+      });
+      const [, files] = await form.parse(req);
+      const file = files.image?.[0];
+      if (!file) {
+        return res.status(400). json({ error: 'No image!' });
+      }
+
+      const newMeta: Image = {
+        id: randomUUID(),
+        filename: file.newFilename,
+        name: file.name ?? file.newFilename,
+        mimetype: file.mimetype ?? 'application/octet-stream',
+        size: file.size,
+        createdAt: new Date().toISOString(),
+      };
+
+      const images = await readMeta();
+      await writeMeta([...images, newMeta]);
+      return res.status(201).json({ ...newMeta, url: `/api/images/${newMeta.id}`});
+    }
+    
+    res.setHeader("Allow", "GET, POST");
+    return res.status(405).end();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    res.status(400).json({ error: message });
+  }
+}

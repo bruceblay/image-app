@@ -1,14 +1,28 @@
+import React from 'react';
 import Stack from '@mui/material/Stack';
 import Autocomplete from '@mui/material/Autocomplete';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
+import UploadModal from './upload-modal';
 
 const mock = [
   { title: 'mock' },
   { title: 'mock2' }
-]
+];
 
-export default function ActionsHeader() {
+type ActionsHeaderProps = {
+  search: string;
+  setSearch: (value: string) => void;
+}
+
+export default function ActionsHeader(props: ActionsHeaderProps) {
+  const { search, setSearch } = props;
+  const [modalOpen, setModalOpen] = React.useState<boolean>(false);
+
+  const handleUploadButton = () => {
+    setModalOpen(!modalOpen);
+  }
+
   return (
     <Stack
       direction="row"
@@ -24,11 +38,14 @@ export default function ActionsHeader() {
         resetHighlightOnMouseLeave
         sx={{ width: 400 }}
         options={mock.map((option) => option.title)}
+        inputValue={search}
+        onInputChange={(_event, newValue) => setSearch(newValue)}
         renderInput={(params) => <TextField {...params} label="Search Images" />}
       />
-      <Button variant="contained">
+      <Button variant="contained" onClick={handleUploadButton}>
         Upload
       </Button>
+      <UploadModal open={modalOpen} setOpen={setModalOpen} />
     </Stack>
   )
 }
