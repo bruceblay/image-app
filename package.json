@@ -23,6 +23,7 @@
     "react-dropzone": "^20.1.4"
   },
   "devDependencies": {
+    "@types/formidable": "^3.5.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

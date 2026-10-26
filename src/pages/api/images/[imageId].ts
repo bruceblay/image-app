@@ -1,27 +1,39 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
-
-type Data = {
-  name: string;
-};
+import fs from 'fs/promises';
+import path from 'path';
+import { readMeta, writeMeta, UPLOADS_DIR } from '../images';
 
 export default async function ImageId(
   req: NextApiRequest,
-  res: NextApiResponse<Data>,
+  res: NextApiResponse,
 ) {
   try {
     let { query, method, body } = req;
 
-    if (method === 'GET') { // fetch single image
+    if (method === 'GET') { // fetch single image.  needed?
+        const images = await readMeta();
+        const image = images.find((img) => img.id === query.imageId);
+        if (!image) return res.status(404).json({ error: 'Not found' });
 
+        const data = await fs.readFile(path.join(UPLOADS_DIR, image.filename));
+        res.setHeader('Content-Type', image.mimetype);
+        return res.send(data);
     } else if (method === 'DELETE') {
+        const images = await readMeta();
+        const image = images.find((img) => img.id === query.imageId);
 
-    } else {
-        res.status(405).end();
+        if (!image) return res.status(404).json({ error: 'Not found' });
+
+        await fs.unlink(path.join(UPLOADS_DIR, image.filename));
+        await writeMeta(images.filter((img) => img.id !== image.id));
+        return res.status(204).end();
     }
-    res.status(200).json({ name: "John Doe" });
+
+    return res.status(405).end();
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    const message = error instanceof Error ? error.message : "Unknown error";
+    res.status(400).json({ error: message });
   }
   
 }

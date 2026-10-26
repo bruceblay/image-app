@@ -4,19 +4,16 @@ import Autocomplete from '@mui/material/Autocomplete';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import UploadModal from './upload-modal';
-
-const mock = [
-  { title: 'mock' },
-  { title: 'mock2' }
-];
+import { ImageType } from '@/types/Image';
 
 type ActionsHeaderProps = {
+  images: ImageType[];
   search: string;
   setSearch: (value: string) => void;
 }
 
 export default function ActionsHeader(props: ActionsHeaderProps) {
-  const { search, setSearch } = props;
+  const { search, setSearch, images } = props;
   const [modalOpen, setModalOpen] = React.useState<boolean>(false);
 
   const handleUploadButton = () => {
@@ -37,7 +34,7 @@ export default function ActionsHeader(props: ActionsHeaderProps) {
         freeSolo
         resetHighlightOnMouseLeave
         sx={{ width: 400 }}
-        options={mock.map((option) => option.title)}
+        options={images.map((option) => option.originalName)}
         inputValue={search}
         onInputChange={(_event, newValue) => setSearch(newValue)}
         renderInput={(params) => <TextField {...params} label="Search Images" />}

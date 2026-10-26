@@ -4,9 +4,10 @@ import styles from "@/styles/Home.module.css";
 import ActionsHeader from '../components/actions-header';
 import { Divider, Stack } from "@mui/material";
 import ImageGrid from '../components/image-grid';
+import { ImageType } from '@/types/Image';
 
 export default function Home() {
-  const [images, setImages] = React.useState([]);
+  const [images, setImages] = React.useState<ImageType[]>([]);
   const [search, setSearch] = React.useState('');
 
   React.useEffect(() => {
@@ -17,6 +18,14 @@ export default function Home() {
     }
     loadImages();
   }, [search]);
+
+  const onDelete = async (id: string) => {
+    const res = await fetch(`/api/images/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      // remove deleted image from list
+      setImages((prev) => prev.filter((img) => img.id !== id));
+    }
+  }
 
   return (
     <>
@@ -31,11 +40,15 @@ export default function Home() {
       >
         <main className={styles.main}>
           <Stack spacing={3} sx={{ width: '100%' }}>
-            <ActionsHeader search={search} setSearch={setSearch} />
+            <ActionsHeader
+              search={search}
+              setSearch={setSearch}
+              images={images}
+            />
 
             <Divider />
 
-            <ImageGrid />
+            <ImageGrid images={images} onDelete={onDelete} />
           </Stack>
         </main>
       </div>

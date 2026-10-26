@@ -11,20 +11,20 @@ export const config = {
   }
 };
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const UPLOADS_DIR = path.join(DATA_DIR, "uploads");
-const META_FILE = path.join(DATA_DIR, 'images.json');
+export const DATA_DIR = path.join(process.cwd(), "data");
+export const UPLOADS_DIR = path.join(DATA_DIR, "uploads");
+export const META_FILE = path.join(DATA_DIR, 'images.json');
 
 export type Image = {
   id: string;
   filename: string;
-  name: string;
+  originalName: string;
   mimetype: string;
   size: number;
   createdAt: string;
 }
 
-async function readMeta(): Promise<Image[]> {
+export async function readMeta(): Promise<Image[]> {
   try {
     let resp = await fs.readFile(META_FILE, 'utf8');
     let parsed = JSON.parse(resp);
@@ -34,7 +34,7 @@ async function readMeta(): Promise<Image[]> {
   }
 }
 
-async function writeMeta(images: Image[]) {
+export async function writeMeta(images: Image[]) {
   await fs.writeFile(META_FILE, JSON.stringify(images, null, 2));
 }
 
@@ -43,14 +43,14 @@ export default async function Images(
   res: NextApiResponse,
 ) {
   try {
-    let { query, method, body } = req;
+    let { query, method } = req;
     if (method === 'GET') { // fetch all or search query params
-      let search: string = query.search ?? '';
+      const search = String(query.search ?? '').toLowerCase();
   
       const images = await readMeta();
       let results = images;
       if (search) {
-        results = images.filter((img) => img.name.toLowerCase().includes(search))
+        results = images.filter((img) => img.originalName.toLowerCase().includes(search))
       }
       let resultsWithUrls = results.map((img) => {
         return {...img, url: `/api/images/${img.id}`};
@@ -60,7 +60,7 @@ export default async function Images(
       const form = formidable({
         uploadDir: UPLOADS_DIR,
         keepExtensions: true,
-        maxFileSize: 10 * 1024 * 1024,
+        maxFileSize: 50 * 1024 * 1024,
         filter: ({ mimetype }) => !!mimetype?.startsWith('image/'),
       });
       const [, files] = await form.parse(req);
@@ -72,7 +72,7 @@ export default async function Images(
       const newMeta: Image = {
         id: randomUUID(),
         filename: file.newFilename,
-        name: file.name ?? file.newFilename,
+        originalName: file.originalFilename ?? file.newFilename,
         mimetype: file.mimetype ?? 'application/octet-stream',
         size: file.size,
         createdAt: new Date().toISOString(),
