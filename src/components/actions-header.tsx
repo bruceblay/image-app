@@ -1,8 +1,5 @@
 import React from 'react';
-import Stack from '@mui/material/Stack';
-import Autocomplete from '@mui/material/Autocomplete';
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
+import { Stack, Autocomplete, Button, TextField } from '@mui/material';
 import UploadModal from './upload-modal';
 import { ImageType } from '@/types/Image';
 
@@ -10,10 +7,11 @@ type ActionsHeaderProps = {
   images: ImageType[];
   search: string;
   setSearch: (value: string) => void;
+  onUpload: (image: ImageType) => void;
 }
 
 export default function ActionsHeader(props: ActionsHeaderProps) {
-  const { search, setSearch, images } = props;
+  const { search, setSearch, images, onUpload } = props;
   const [modalOpen, setModalOpen] = React.useState<boolean>(false);
 
   const handleUploadButton = () => {
@@ -42,7 +40,7 @@ export default function ActionsHeader(props: ActionsHeaderProps) {
       <Button variant="contained" onClick={handleUploadButton}>
         Upload
       </Button>
-      <UploadModal open={modalOpen} setOpen={setModalOpen} />
+      <UploadModal open={modalOpen} setOpen={setModalOpen} onUpload={onUpload} />
     </Stack>
   )
 }

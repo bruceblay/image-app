@@ -12,7 +12,10 @@ export default function ImageGrid(props: ImageGridProps) {
 
   return (
     <Stack spacing={2}>
-      <Typography variant='h6'>{images.length} Images</Typography>
+      <Typography variant='h6'>
+        {images.length} Images
+      </Typography>
+
       <Grid container spacing={4}>
         {images.map((img) => (
           <Grid key={img.id} size={6}>

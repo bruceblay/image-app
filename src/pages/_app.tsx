@@ -7,7 +7,14 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 
-const theme = createTheme({ palette: { mode: 'dark' }});
+const theme = createTheme({
+  palette: {
+    mode: 'dark',
+    primary: {
+      main: '#2563eb',
+    }
+  }
+});
 
 export default function App(props: AppProps) {
   const { Component, pageProps } = props;

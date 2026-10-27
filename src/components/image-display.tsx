@@ -20,10 +20,10 @@ export default function ImageDisplay({ image, onDelete }: ImageDisplayProps) {
         }}
       >
         <Image
-          src={image.url}
+          src={image?.url || ''}
           alt={image.originalName}
           fill
-          sizes="(max-width: 1200px) 50vw, 25vs"
+          sizes="(max-width: 1200px) 50vw, 600px"
           style={{ objectFit: 'cover' }}
         />
         <IconButton
@@ -36,16 +36,28 @@ export default function ImageDisplay({ image, onDelete }: ImageDisplayProps) {
             opacity: 0,
             transition: 'opacity 0.2s',
             backdropFilter: 'blur(15px)',
-            color: 'red'
+            color: 'error.main'
           }}
         >
           <DeleteIcon />
         </IconButton>
-        
       </Box>
-      <Typography variant="body2">
-        {image.originalName}
-      </Typography>
+
+      <Stack
+        direction='row'
+        sx={{
+          mt: 1,
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}
+      >
+        <Typography variant="body2">
+          {image.originalName}
+        </Typography>
+        <Typography variant="body2">
+          Uploaded at: {new Date(image.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+        </Typography>
+      </Stack>
     </Stack>
   )
 }

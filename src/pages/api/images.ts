@@ -2,41 +2,14 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import formidable from 'formidable';
 import { randomUUID } from 'crypto';
-import fs from 'fs/promises';
-import path from 'path';
+import { readMeta, UPLOADS_DIR, writeMeta, withLock } from '@/lib/images-store';
+import { ImageType } from "@/types/Image";
 
 export const config = {
   api: {
     bodyParser: false
   }
 };
-
-export const DATA_DIR = path.join(process.cwd(), "data");
-export const UPLOADS_DIR = path.join(DATA_DIR, "uploads");
-export const META_FILE = path.join(DATA_DIR, 'images.json');
-
-export type Image = {
-  id: string;
-  filename: string;
-  originalName: string;
-  mimetype: string;
-  size: number;
-  createdAt: string;
-}
-
-export async function readMeta(): Promise<Image[]> {
-  try {
-    let resp = await fs.readFile(META_FILE, 'utf8');
-    let parsed = JSON.parse(resp);
-    return parsed;
-  } catch {
-    return [];
-  }
-}
-
-export async function writeMeta(images: Image[]) {
-  await fs.writeFile(META_FILE, JSON.stringify(images, null, 2));
-}
 
 export default async function Images(
   req: NextApiRequest,
@@ -69,7 +42,7 @@ export default async function Images(
         return res.status(400). json({ error: 'No image!' });
       }
 
-      const newMeta: Image = {
+      const newMeta: ImageType = {
         id: randomUUID(),
         filename: file.newFilename,
         originalName: file.originalFilename ?? file.newFilename,
@@ -78,8 +51,12 @@ export default async function Images(
         createdAt: new Date().toISOString(),
       };
 
-      const images = await readMeta();
-      await writeMeta([...images, newMeta]);
+      // prevents race conditions on multi file post
+      await withLock(async () => {
+        const images = await readMeta();
+        await writeMeta([...images, newMeta]);
+      });
+      
       return res.status(201).json({ ...newMeta, url: `/api/images/${newMeta.id}`});
     }
     

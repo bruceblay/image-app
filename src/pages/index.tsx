@@ -1,8 +1,7 @@
 import React from 'react';
 import Head from "next/head";
-import styles from "@/styles/Home.module.css";
 import ActionsHeader from '../components/actions-header';
-import { Divider, Stack } from "@mui/material";
+import { Divider, Stack, Container } from "@mui/material";
 import ImageGrid from '../components/image-grid';
 import { ImageType } from '@/types/Image';
 
@@ -18,6 +17,10 @@ export default function Home() {
     }
     loadImages();
   }, [search]);
+
+  const onUpload = (image: ImageType) => {
+    setImages((prev) => [...prev, image]);
+  }
 
   const onDelete = async (id: string) => {
     const res = await fetch(`/api/images/${id}`, { method: 'DELETE' });
@@ -35,23 +38,20 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div
-        className={`${styles.page}`}
-      >
-        <main className={styles.main}>
-          <Stack spacing={3} sx={{ width: '100%' }}>
-            <ActionsHeader
-              search={search}
-              setSearch={setSearch}
-              images={images}
-            />
+      <Container maxWidth="lg" sx={{ py: 8 }}>
+        <Stack spacing={3} sx={{ width: '100%' }}>
+          <ActionsHeader
+            search={search}
+            setSearch={setSearch}
+            images={images}
+            onUpload={onUpload}
+          />
 
-            <Divider />
+          <Divider />
 
-            <ImageGrid images={images} onDelete={onDelete} />
-          </Stack>
-        </main>
-      </div>
+          <ImageGrid images={images} onDelete={onDelete} />
+        </Stack>
+      </Container>
     </>
   );
 }

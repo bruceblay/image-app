@@ -5,5 +5,5 @@ export type ImageType = {
   mimetype: string;
   size: number;
   createdAt: string;
-  url: string;
+  url?: string;
 }
